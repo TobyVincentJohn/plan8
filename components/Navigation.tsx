@@ -11,7 +11,7 @@ export default function Navigation() {
         <div className="flex items-center justify-between">
           {/* Logo and Brand */}
           <div className="flex items-center">
-            <img src="/logo_blue.png" alt="a2b.ai logo" className="h-12 w-auto" />
+            <img src="/logo_blue.png" alt="Plan8 logo" className="h-12 w-auto" />
           </div>
 
           {/* Navigation Links */}

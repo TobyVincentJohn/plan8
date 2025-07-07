@@ -1145,7 +1145,7 @@ export default function TravelPlanPage() {
                 <div className="w-6 h-6 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center">
                   <Plane className="w-4 h-4 text-white" />
                 </div>
-                <span className={`text-lg font-bold text-gray-900 transition-opacity duration-300 ${sidebarFullyOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>a2b.ai</span>
+                <span className={`text-lg font-bold text-gray-900 transition-opacity duration-300 ${sidebarFullyOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>Plan8</span>
               </div>
             )}
             <Button
@@ -1294,7 +1294,7 @@ export default function TravelPlanPage() {
               <div className="w-6 h-6 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center">
                 <Plane className="w-4 h-4 text-white" />
               </div>
-              <span className="text-lg font-bold text-gray-900">a2b.ai</span>
+              <span className="text-lg font-bold text-gray-900">Plan8</span>
             </Link>
             <div className="flex items-center space-x-2">
               <Button

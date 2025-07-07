@@ -240,7 +240,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             {/* Logo and Brand */}
             <Link href="/" className="flex items-center">
-              <img src="/logo_blue.png" alt="a2b.ai logo" className="h-10 w-auto" />
+              <img src="/logo_blue.png" alt="Plan8 logo" className="h-10 w-auto" />
             </Link>
             
             <div className="flex items-center space-x-4">

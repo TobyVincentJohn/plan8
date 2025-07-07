@@ -234,7 +234,7 @@ export default function CreateTripPage() {
             <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center">
               <Plane className="w-7 h-7 text-white" />
             </div>
-            <span className="text-3xl font-bold text-gray-900">a2b.ai</span>
+            <span className="text-3xl font-bold text-gray-900">Plan8</span>
           </div>
         </div>
 

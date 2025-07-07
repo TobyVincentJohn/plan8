@@ -94,7 +94,7 @@ export default function AuthPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-8">
-            <img src="/logo.png" alt="a2b.ai logo" className="h-16 w-auto" />
+            <img src="/logo.png" alt="Plan8 logo" className="h-16 w-auto" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
             {isLogin ? 'Welcome back' : 'Create your account'}

@@ -1,5 +1,5 @@
 /*
-  # Complete Database Schema for a2b.ai Travel Planning Application
+  # Complete Database Schema for Plan8 Travel Planning Application
 
   1. Tables Created
     - `profiles` - User profile information

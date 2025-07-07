@@ -36,7 +36,7 @@ const customFont = localFont({
 });
 
 export const metadata: Metadata = {
-  title: 'a2b.ai - Collaborative Travel Planning',
+  title: 'Plan8 - Collaborative Travel Planning',
   description: 'Trips made social, plans made easy. Plan your perfect journey with friends and family.',
 };
 

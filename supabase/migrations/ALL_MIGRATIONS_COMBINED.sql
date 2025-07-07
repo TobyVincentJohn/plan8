@@ -327,7 +327,7 @@ ON group_members(group_id, confirm_itinerary_vote);
 -- Migration: 20250629184743_muddy_waterfall.sql
 -- =============================
 /*
-  # Complete Database Schema for a2b.ai Travel Planning Application
+  # Complete Database Schema for Plan8 Travel Planning Application
 
   1. Tables Created
     - `profiles` - User profile information
