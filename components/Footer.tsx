@@ -79,18 +79,6 @@ export default function Footer() {
             <a href="#terms" className="text-gray-400 hover:text-white text-sm transition-colors">Terms of Service</a>
             <a href="#privacy" className="text-gray-400 hover:text-white text-sm transition-colors">Privacy Policy</a>
             <a href="#cookies" className="text-gray-400 hover:text-white text-sm transition-colors">Cookie Policy</a>
-            <a 
-              href="https://bolt.new" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="transition-opacity hover:opacity-80"
-            >
-              <img 
-                src="/logotext_poweredby_360w.png" 
-                alt="Powered by Bolt.new" 
-                className="h-20 w-auto"
-              />
-            </a>
           </div>
         </div>
       </div>
