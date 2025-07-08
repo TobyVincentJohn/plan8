@@ -19,12 +19,12 @@ export default function SettingsPage() {
               <button className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
                 <ArrowLeft className="w-4 h-4" />
                 <span>Back to Dashboard</span>
-              </button>
+              </button> 
             </Link>
           </div>
         </div>
       </nav>
-
+  
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-6 py-8 pt-24">
         <div className="mb-8">
