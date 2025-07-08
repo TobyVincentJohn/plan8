@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import Groq from 'groq-sdk';
 import { supabase } from '@/lib/supabaseClient';
 import { getPlaceImage } from '@/lib/getLocationImage';
 import { getPlaceCoordinates } from '@/lib/utils';
@@ -7,8 +7,10 @@ import { getOptimalRoute, getAllTravelModes } from '@/lib/getRoute';
 import { getGooglePlacePhotoUrl } from '@/lib/getPlacePhoto';
 import { randomUUID } from 'crypto';
 
-// Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+// Initialize Groq AI
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY!,
+});
 
 interface GroupMember {
   user_id: string;
@@ -445,10 +447,12 @@ General:
 `;
 
     // Generate itinerary using Gemini
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite-preview-06-17' });
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    const result = await groq.chat.completions.create({
+      model: 'llama-3.1-8b-instant',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.7,
+    });
+    const text = result.choices[0].message.content || '';
 
     // Store the raw API response
     const rawApiResponse = {
@@ -653,6 +657,17 @@ General:
       .eq('group_id', groupId);
     if (updateHotelsError) {
       console.error('Error saving hotels to travel_groups:', updateHotelsError);
+    }
+
+    // Save selected flight details to selected_flight column in travel_groups
+    if (itineraryData.selectedFlight) {
+      const { error: updateFlightError } = await supabase
+        .from('travel_groups')
+        .update({ selected_flight: itineraryData.selectedFlight })
+        .eq('group_id', groupId);
+      if (updateFlightError) {
+        console.error('Error saving selected flight to travel_groups:', updateFlightError);
+      }
     }
 
     return NextResponse.json({

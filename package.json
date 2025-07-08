@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@elevenlabs/react": "^0.1.7",
-    "@google/generative-ai": "^0.24.1",
+
     "@googlemaps/google-maps-services-js": "^3.4.1",
     "@googlemaps/js-api-loader": "^1.16.8",
     "@hookform/resolvers": "^3.9.0",
@@ -55,6 +55,7 @@
     "embla-carousel-react": "^8.3.0",
     "eslint": "8.49.0",
     "eslint-config-next": "13.5.1",
+    "groq-sdk": "^0.26.0",
     "gsap": "^3.13.0",
     "html2canvas": "^1.4.1",
     "input-otp": "^1.2.4",

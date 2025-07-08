@@ -324,7 +324,7 @@ export default function AIPreferencesPage() {
                     {/* Voice AI Widget Container - Main Content */}
                     <div className="flex-1" style={{ minHeight: '500px' }}>
                       <VoiceAgentWidget
-                        agentId="agent_01jxy55f0afx8aax07xahyqsy5"
+                        agentId="agent_01jzn1e8h3f05abj2hsrv3j9q7"
                         userId={currentUserId}
                         groupId={groupId}
                         destination={destination}

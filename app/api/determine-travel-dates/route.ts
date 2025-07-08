@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import Groq from 'groq-sdk';
 import { supabase } from '@/lib/supabaseClient';
 
-// Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+// Initialize Groq AI
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY!,
+});
 
 interface GroupMember {
   user_id: string;
@@ -239,19 +241,20 @@ ${isSinglePerson
 - Default to 2-4 weeks from today if no specific dates work for everyone
 `;
 
-    console.log('🤖 Sending request to Gemini AI...');
+    console.log('🤖 Sending request to Groq AI...');
     console.log('🤖 Prompt length:', prompt.length, 'characters');
 
-    // Generate travel dates using Gemini
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite-preview-06-17' });
-    
+    // Generate travel dates using Groq
     try {
-      const result = await model.generateContent(prompt);
-      console.log('✅ Gemini AI response received');
+      const result = await groq.chat.completions.create({
+        model: 'llama-3.1-8b-instant',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.7,
+      });
+      console.log('✅ Groq AI response received');
       
-      const response = await result.response;
-      const text = response.text();
-      console.log('🤖 Raw Gemini response:', text);
+      const text = result.choices[0].message.content || '';
+              console.log('🤖 Raw Groq response:', text);
 
       // Parse the JSON response
       let travelDatesData;
@@ -262,11 +265,11 @@ ${isSinglePerson
           travelDatesData = JSON.parse(jsonMatch[0]);
           console.log('✅ JSON parsed successfully:', travelDatesData);
         } else {
-          console.error('❌ No JSON found in Gemini response');
+          console.error('❌ No JSON found in Groq response');
           throw new Error('No JSON found in response');
         }
       } catch (parseError) {
-        console.error('❌ Failed to parse Gemini response:', parseError);
+        console.error('❌ Failed to parse Groq response:', parseError);
         console.error('❌ Raw response:', text);
         return NextResponse.json({ error: 'Failed to parse AI response' }, { status: 500 });
       }
@@ -428,15 +431,15 @@ ${isSinglePerson
         });
       }
 
-    } catch (geminiError) {
-      console.error('❌ Error calling Gemini AI:', geminiError);
-      console.error('❌ Gemini error details:', {
-        name: geminiError instanceof Error ? geminiError.name : 'Unknown',
-        message: geminiError instanceof Error ? geminiError.message : String(geminiError),
-        stack: geminiError instanceof Error ? geminiError.stack : 'No stack trace'
+    } catch (groqError) {
+      console.error('❌ Error calling Groq AI:', groqError);
+      console.error('❌ Groq error details:', {
+        name: groqError instanceof Error ? groqError.name : 'Unknown',
+        message: groqError instanceof Error ? groqError.message : String(groqError),
+        stack: groqError instanceof Error ? groqError.stack : 'No stack trace'
       });
       return NextResponse.json({ 
-        error: 'Failed to generate travel dates with AI: ' + (geminiError instanceof Error ? geminiError.message : 'Unknown error')
+        error: 'Failed to generate travel dates with AI: ' + (groqError instanceof Error ? groqError.message : 'Unknown error')
       }, { status: 500 });
     }
 

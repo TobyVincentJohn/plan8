@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import Groq from 'groq-sdk';
 import { supabase } from '@/lib/supabaseClient';
 import { getPlaceImage } from '@/lib/getLocationImage';
 import { getPlaceCoordinates } from '@/lib/utils';
 import { getAllTravelModes } from '@/lib/getRoute';
 import { getGooglePlacePhotoUrl } from '@/lib/getPlacePhoto';
 
-// Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+// Initialize Groq AI
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY!,
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -150,11 +152,13 @@ INSTRUCTIONS:
 Return the updated itinerary in the EXACT same JSON format as the original response.
 `;
 
-      // Generate updated itinerary using Gemini
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite-preview-06-17' });
-      const result = await model.generateContent(regenerationPrompt);
-      const response = await result.response;
-      const text = response.text();
+      // Generate updated itinerary using Groq
+      const result = await groq.chat.completions.create({
+        model: 'llama-3.1-8b-instant',
+        messages: [{ role: 'user', content: regenerationPrompt }],
+        temperature: 0.7,
+      });
+      const text = result.choices[0].message.content || '';
 
       // Log the full LLM API call (prompt and response)
       console.log('LLM Regeneration Prompt:', regenerationPrompt);
@@ -165,7 +169,7 @@ Return the updated itinerary in the EXACT same JSON format as the original respo
         prompt: regenerationPrompt,
         response: text,
         timestamp: new Date().toISOString(),
-        model: 'gemini-2.5-flash-lite-preview-06-17',
+        model: 'llama-3.1-8b-instant',
         type: 'regeneration'
       };
 
@@ -179,7 +183,7 @@ Return the updated itinerary in the EXACT same JSON format as the original respo
           throw new Error('No JSON found in response');
         }
       } catch (parseError) {
-        console.error('Failed to parse Gemini regeneration response:', parseError);
+        console.error('Failed to parse Groq regeneration response:', parseError);
         return NextResponse.json({ error: 'Failed to parse AI response' }, { status: 500 });
       }
 
