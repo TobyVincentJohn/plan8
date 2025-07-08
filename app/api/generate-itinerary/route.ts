@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Groq from 'groq-sdk';
 import { supabase } from '@/lib/supabaseClient';
+import { neo4jService } from '@/lib/neo4jClient';
+import { knowledgeGraphProcessor } from '@/lib/knowledgeGraphProcessor';
 import { getPlaceImage } from '@/lib/getLocationImage';
 import { getPlaceCoordinates } from '@/lib/utils';
 import { getOptimalRoute, getAllTravelModes } from '@/lib/getRoute';
@@ -211,18 +213,31 @@ export async function POST(request: NextRequest) {
     }
 
     // Format preferences for Gemini
-    const memberPreferences = membersData.map((member: any) => ({
-      name: `${member.profiles.first_name} ${member.profiles.last_name}`,
-      dealBreakers: member.deal_breakers_and_strong_preferences,
-      interests: member.interests_and_activities,
-      niceToHaves: member.nice_to_haves_and_openness,
-      motivations: member.travel_motivations,
-      mustDo: member.must_do_experiences,
-      learning: member.learning_interests,
-      schedule: member.schedule_and_logistics,
-      budget: member.budget_and_spending,
-      travelStyle: member.travel_style_preferences,
-      flightPreference: member.flight_preference
+    // Format member preferences for LLM with knowledge graph context
+    const memberPreferences = await Promise.all(membersData.map(async (member: any) => {
+      // Get knowledge graph context for this user
+      const kgContext = await neo4jService.getUserTravelContext(member.user_id);
+      
+      return {
+        name: `${member.profiles.first_name} ${member.profiles.last_name}`,
+        dealBreakers: member.deal_breakers_and_strong_preferences,
+        interests: member.interests_and_activities,
+        niceToHaves: member.nice_to_haves_and_openness,
+        motivations: member.travel_motivations,
+        mustDo: member.must_do_experiences,
+        learning: member.learning_interests,
+        schedule: member.schedule_and_logistics,
+        budget: member.budget_and_spending,
+        travelStyle: member.travel_style_preferences,
+        flightPreference: member.flight_preference,
+        // Add knowledge graph insights
+        kgInsights: kgContext ? {
+          previousDestinations: kgContext.visitedDestinations,
+          preferredActivities: kgContext.interests,
+          constraints: kgContext.dealBreakers,
+          travelPatterns: kgContext.travelStyles
+        } : null
+      };
     }));
 
     // Fetch real flight data from Booking.com
@@ -270,9 +285,23 @@ Flight Details: ${flight.text_content}
       // Continue with itinerary generation without flight data
     }
 
-    // Create prompt for Gemini
+    // Get destination insights from knowledge graph
+    const destinationInsights = await neo4jService.getDestinationInsights(groupData.destination_display || groupData.destination);
+
+    // Create enhanced prompt with knowledge graph context
     const prompt = `
-You are a professional travel planner. Create a detailed group itinerary for ${groupData.destination} based on the group member preferences below:
+You are a professional travel planner with access to extensive travel knowledge and user preferences. Create a detailed group itinerary for ${groupData.destination} based on the group member preferences below:
+
+${destinationInsights ? `
+DESTINATION INSIGHTS FROM PREVIOUS TRAVELERS:
+- ${destinationInsights.totalTrips} previous trips planned to this destination
+- Popular places from past travelers: ${destinationInsights.popularPlaces.join(', ')}
+- Recommended hotels from past trips: ${destinationInsights.popularHotels.join(', ')}
+- Common interests of visitors: ${destinationInsights.commonInterests.join(', ')}
+- Average trip duration: ${destinationInsights.averageDuration || 'N/A'} days
+
+Use these insights to enhance your recommendations, but prioritize the current group's specific preferences.
+` : ''}
 
 TRAVEL DATES AND DURATION:
 - Departure Date: ${groupData.departure_date}
@@ -292,6 +321,11 @@ ${memberPreferences.map(member => `
 - Budget: ${member.budget || 'None specified'}
 - Travel Style: ${member.travelStyle || 'None specified'}
 - Flight Preference: ${member.flightPreference || 'None specified'}
+${member.kgInsights ? `
+- Previous Travel Experience: Visited ${member.kgInsights.previousDestinations.join(', ') || 'No previous data'}
+- Known Activity Preferences: ${member.kgInsights.preferredActivities.join(', ') || 'No previous data'}
+- Historical Travel Patterns: ${member.kgInsights.travelPatterns.join(', ') || 'No previous data'}
+` : ''}
 `).join('\n')}
 
 ${availableFlights}
@@ -668,6 +702,34 @@ General:
       if (updateFlightError) {
         console.error('Error saving selected flight to travel_groups:', updateFlightError);
       }
+    }
+
+    // Store trip and itinerary data in knowledge graph
+    try {
+      console.log('🧠 Storing trip data in knowledge graph...');
+      
+      // Create trip node
+      await neo4jService.createTripNode(groupId, {
+        destination: groupData.destination,
+        destination_display: groupData.destination_display,
+        departure_date: groupData.departure_date,
+        return_date: groupData.return_date,
+        trip_duration_days: groupData.trip_duration_days,
+        budgetRange: itineraryData.budgetRange
+      });
+
+      // Link users to trip
+      for (const member of membersData) {
+        await neo4jService.linkUserToTrip(member.user_id, groupId);
+      }
+
+      // Add itinerary details
+      await neo4jService.addItineraryData(groupId, itineraryData);
+      
+      console.log('✅ Trip data stored in knowledge graph successfully');
+    } catch (kgError) {
+      console.error('❌ Error storing trip data in knowledge graph:', kgError);
+      // Don't fail the API if knowledge graph storage fails
     }
 
     return NextResponse.json({

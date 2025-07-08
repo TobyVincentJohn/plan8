@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
+import { neo4jService } from '@/lib/neo4jClient';
 
 // Extract user_id and group_id from webhook payload
 function extractUserContext(webhookData: any) {
@@ -123,6 +124,37 @@ export async function POST(request: NextRequest) {
     }
 
     await updateMemberPreferences(userId, groupId, preferences);
+
+    // Update knowledge graph with user preferences
+    try {
+      console.log('🧠 Updating knowledge graph with user preferences...');
+      
+      // Get user profile for knowledge graph
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('first_name, last_name, email, country, state')
+        .eq('user_id', userId)
+        .single();
+
+      if (userProfile) {
+        // Create or update user node
+        await neo4jService.createUserNode(userId, {
+          firstName: userProfile.first_name,
+          lastName: userProfile.last_name,
+          email: userProfile.email,
+          country: userProfile.country,
+          state: userProfile.state
+        });
+
+        // Create travel preferences in knowledge graph
+        await neo4jService.createTravelPreferences(userId, preferences);
+        
+        console.log('✅ Knowledge graph updated successfully');
+      }
+    } catch (kgError) {
+      console.error('❌ Error updating knowledge graph:', kgError);
+      // Don't fail the webhook if knowledge graph update fails
+    }
 
     return NextResponse.json({
       success: true,
